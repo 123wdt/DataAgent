@@ -24,8 +24,8 @@ from voice import VoiceManager
 # The app heavily uses AgentClient to interact with the agent's FastAPI endpoints.
 
 
-APP_TITLE = "Agent Service Toolkit"
-APP_ICON = "🧰"
+APP_TITLE = "BizAgent 企业 AI 数据智能平台"
+APP_ICON = "📊"
 USER_ID_COOKIE = "user_id"
 
 
@@ -102,8 +102,8 @@ async def main() -> None:
             with st.spinner("Connecting to agent service..."):
                 st.session_state.agent_client = AgentClient(base_url=agent_url)
         except AgentClientError as e:
-            st.error(f"Error connecting to agent service at {agent_url}: {e}")
-            st.markdown("The service might be booting up. Try again in a few seconds.")
+            st.error(f"连接接口服务失败 {agent_url}：{e}")
+            st.markdown("服务可能还在启动中，请稍后重试。")
             st.stop()
     agent_client: AgentClient = st.session_state.agent_client
 
@@ -126,7 +126,7 @@ async def main() -> None:
                     thread_id=thread_id, agent=resume_agent
                 ).messages
             except AgentClientError:
-                st.error("No message history found for this Thread ID.")
+                st.error("该会话没有历史消息。")
                 messages = []
         st.session_state.messages = messages
         st.session_state.thread_id = thread_id
@@ -142,7 +142,7 @@ async def main() -> None:
         "Full toolkit for running an AI agent service built with LangGraph, FastAPI and Streamlit"
         ""
 
-        if st.button(":material/chat: New Chat", use_container_width=True):
+        if st.button(":material/chat: 新对话", use_container_width=True):
             st.session_state.messages = []
             st.session_state.thread_id = str(uuid.uuid4())
             # Clear saved audio when starting new chat
@@ -150,7 +150,7 @@ async def main() -> None:
                 del st.session_state.last_audio
             st.rerun()
 
-        with st.expander(":material/history: Previous Chats", expanded=False):
+        with st.expander(":material/history: 历史会话", expanded=False):
             try:
                 url_agent = st.query_params.get("agent")
                 if url_agent in [a.key for a in agent_client.info.agents]:
@@ -165,7 +165,7 @@ async def main() -> None:
                 )
                 thread_list = user_threads.threads
             except Exception as e:
-                st.caption(f"Couldn't load conversation history: {e}")
+                st.caption(f"无法加载历史会话：{e}")
                 thread_list = []
 
             for t in thread_list:
@@ -176,7 +176,7 @@ async def main() -> None:
                             thread_id=t.thread_id, agent=t.agent_id
                         )
                     except AgentClientError:
-                        st.error("Could not load that conversation.")
+                        st.error("无法加载该会话。")
                         continue
                     st.session_state.messages = history.messages
                     st.session_state.thread_id = t.thread_id
@@ -185,24 +185,24 @@ async def main() -> None:
                         del st.session_state.last_audio
                     st.rerun()
 
-        with st.popover(":material/settings: Settings", use_container_width=True):
+        with st.popover(":material/settings: 设置", use_container_width=True):
             model_idx = agent_client.info.models.index(agent_client.info.default_model)
-            model = st.selectbox("LLM to use", options=agent_client.info.models, index=model_idx)
+            model = st.selectbox("使用的模型", options=agent_client.info.models, index=model_idx)
             agent_list = [a.key for a in agent_client.info.agents]
             agent_idx = agent_list.index(agent_client.info.default_agent)
             # Sync the selection to the ?agent= URL param (dropped when it's the default).
             agent_client.agent = st.selectbox(
-                "Agent to use",
+                "使用的智能体",
                 options=agent_list,
                 index=agent_idx,
                 key="agent",
                 bind="query-params",
                 on_change=fetch_user_threads_cached.clear,
             )
-            use_streaming = st.toggle("Stream results", value=True)
+            use_streaming = st.toggle("流式输出", value=True)
             # Audio toggle with callback: clears cached audio when toggled off
             enable_audio = st.toggle(
-                "Enable audio generation",
+                "开启语音播报",
                 value=True,
                 disabled=not voice or not voice.tts,
                 help="Configure VOICE_TTS_PROVIDER in .env to enable"
@@ -217,32 +217,32 @@ async def main() -> None:
             )
 
             # Display user ID (for debugging or user information)
-            st.text_input("User ID (read-only)", value=user_id, disabled=True)
+            st.text_input("用户标识（只读）", value=user_id, disabled=True)
 
-        @st.dialog("Architecture")
+        @st.dialog("架构图")
         def architecture_dialog() -> None:
             st.image(
                 "https://github.com/JoshuaC215/agent-service-toolkit/blob/main/media/agent_architecture.png?raw=true"
             )
             "[View full size on Github](https://github.com/JoshuaC215/agent-service-toolkit/blob/main/media/agent_architecture.png)"
             st.caption(
-                "App hosted on [Streamlit Cloud](https://share.streamlit.io/) with FastAPI service running in [Azure](https://learn.microsoft.com/en-us/azure/app-service/)"
+                "应用部署：前端 Streamlit，接口服务 FastAPI"
             )
 
-        if st.button(":material/schema: Architecture", use_container_width=True):
+        if st.button(":material/schema: 架构图", use_container_width=True):
             architecture_dialog()
 
-        with st.popover(":material/policy: Privacy", use_container_width=True):
+        with st.popover(":material/policy: 隐私政策", use_container_width=True):
             st.write(
-                "Prompts, responses and feedback in this app are anonymously recorded and saved to LangSmith for product evaluation and improvement purposes only."
+                "本应用中的对话内容仅保存在本地，仅用于功能演示。"
             )
 
-        @st.dialog("Share/resume chat")
+        @st.dialog("分享/恢复会话")
         def share_chat_dialog() -> None:
             # st.context.url is the browser URL (with query string stripped). Rebuild
             # the params, including the agent so the thread resumes through the right graph.
             if not st.context.url:
-                st.error("Could not determine the app URL to build a shareable link.")
+                st.error("无法获取应用地址，无法生成分享链接。")
                 return
             query = urllib.parse.urlencode(
                 {
@@ -252,15 +252,15 @@ async def main() -> None:
                 }
             )
             chat_url = f"{st.context.url}?{query}"
-            st.markdown(f"**Chat URL:**\n```text\n{chat_url}\n```")
-            st.info("Copy the above URL to share or revisit this chat")
+            st.markdown(f"**会话链接：**\n```text\n{chat_url}\n```")
+            st.info("复制上方链接即可分享或继续该会话")
 
-        if st.button(":material/upload: Share/resume chat", use_container_width=True):
+        if st.button(":material/upload: 分享/恢复会话", use_container_width=True):
             share_chat_dialog()
 
-        "[View the source code](https://github.com/JoshuaC215/agent-service-toolkit)"
+        "[查看源码](https://github.com/JoshuaC215/agent-service-toolkit)"
         st.caption(
-            "Made with :material/favorite: by [Joshua](https://www.linkedin.com/in/joshua-k-carroll/) in Oakland"
+            "由 BizAgent 团队构建，基于开源模板 agent-service-toolkit"
         )
 
     # Draw existing messages
@@ -269,16 +269,16 @@ async def main() -> None:
     if len(messages) == 0:
         match agent_client.agent:
             case "chatbot":
-                WELCOME = "Hello! I'm a simple chatbot. Ask me anything!"
+                WELCOME = "你好！我是简易聊天机器人，有什么想问的尽管说！"
             case "interrupt-agent":
-                WELCOME = "Hello! I'm an interrupt agent. Tell me your birthday and I will predict your personality!"
+                WELCOME = "你好！我是带确认流程的智能体。告诉我你的生日，我来预测你的性格！"
             case "research-assistant":
-                WELCOME = "Hello! I'm an AI-powered research assistant with web search and a calculator. Ask me anything!"
+                WELCOME = "你好！我是研究助手，支持联网搜索和计算器，有什么问题尽管问！"
             case "rag-assistant":
-                WELCOME = """Hello! I'm an AI-powered Company Policy & HR assistant with access to AcmeTech's Employee Handbook.
-                I can help you find information about benefits, remote work, time-off policies, company values, and more. Ask me anything!"""
+                WELCOME = """你好！我是企业知识问答助手，可以查询公司的制度文档和员工手册。
+                我能帮你找到关于福利、远程办公、休假政策、公司价值观等信息，随便问！"""
             case _:
-                WELCOME = "Hello! I'm an AI agent. Ask me anything!"
+                WELCOME = "你好！我是 AI 智能体，有什么可以帮你？"
 
         with st.chat_message("ai"):
             st.write(WELCOME)
@@ -311,7 +311,7 @@ async def main() -> None:
     if voice:
         user_input = voice.get_chat_input()
     else:
-        user_input = st.chat_input()
+        user_input = st.chat_input(placeholder="请输入你的问题…")
 
     if user_input:
         is_first_message = len(messages) == 0
@@ -357,7 +357,7 @@ async def main() -> None:
                 fetch_user_threads_cached.clear()
             st.rerun()  # Clear stale containers
         except AgentClientError as e:
-            st.error(f"Error generating response: {e}")
+            st.error(f"生成回复出错：{e}")
             st.stop()
 
     # If messages have been generated, show feedback widget
@@ -549,10 +549,10 @@ async def handle_feedback() -> None:
                 kwargs={"comment": "In-line human feedback"},
             )
         except AgentClientError as e:
-            st.error(f"Error recording feedback: {e}")
+            st.error(f"记录反馈出错：{e}")
             st.stop()
         st.session_state.last_feedback = (latest_run_id, feedback)
-        st.toast("Feedback recorded", icon=":material/reviews:")
+        st.toast("反馈已记录", icon=":material/reviews:")
 
 
 async def handle_sub_agent_msgs(messages_agen, status, is_new):
