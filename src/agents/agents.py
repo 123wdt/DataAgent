@@ -6,6 +6,7 @@ from langgraph.pregel import Pregel
 from agents.bg_task_agent.bg_task_agent import bg_task_agent
 from agents.chatbot import chatbot
 from agents.command_agent import command_agent
+from agents.daily_report_agent import daily_report_agent
 from agents.github_mcp_agent.github_mcp_agent import github_mcp_agent
 from agents.interrupt_agent import interrupt_agent
 from agents.knowledge_agent import diagnosis_agent, knowledge_agent
@@ -74,6 +75,10 @@ agents: dict[str, Agent] = {
     "diagnosis-agent": Agent(
         description="预警诊断Agent：数据证明+建议出处双轨，输出土壤墒情/盐碱异常诊断报告。",
         graph_like=diagnosis_agent,
+    ),
+    "daily-report-agent": Agent(
+        description="日报Agent：汇总各区域墒情/气象/预警，生成农业物联网日报。",
+        graph_like=daily_report_agent,
     ),
 }
 

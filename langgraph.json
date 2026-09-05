@@ -5,7 +5,8 @@
         "research_assistant": "./src/agents/research_assistant.py:research_assistant",
         "sql_data_agent": "./src/agents/sql_data_agent/sql_agent.py:sql_data_agent",
         "knowledge_agent": "./src/agents/knowledge_agent/knowledge_agent.py:knowledge_agent",
-        "diagnosis_agent": "./src/agents/knowledge_agent/diagnosis_agent.py:diagnosis_agent"
+        "diagnosis_agent": "./src/agents/knowledge_agent/diagnosis_agent.py:diagnosis_agent",
+        "daily_report_agent": "./src/agents/daily_report_agent.py:daily_report_agent"
     },
     "env": "./.env"
 }

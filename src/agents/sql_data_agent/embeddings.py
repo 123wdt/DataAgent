@@ -33,6 +33,8 @@ SCHEMA_PATH = PROJECT_ROOT / "scripts" / "db" / "schema.sql"
 MODELS_CACHE = str(PROJECT_ROOT / "models" / "embed")
 COLLECTION = "bizagent_rag_ddl"
 _embed_fn: Any = None
+# 进程内 Chroma 实例缓存：persist_dir -> Chroma（避免重复创建 PersistentClient）
+_CHROMA_CACHE: dict[str, Any] = {}
 
 
 def get_embedding_function() -> Any:
@@ -92,15 +94,23 @@ def build_index(cards: list[TableCard], persist_dir: str = DEFAULT_PERSIST) -> C
 
 
 def load_index(persist_dir: str = DEFAULT_PERSIST) -> Chroma | None:
-    """加载已建好的向量库；不存在返回 None。"""
+    """加载已建好的向量库；不存在返回 None。
+
+    进程内单例缓存同一个 persist_directory 的 Chroma 实例，避免每次工具调用
+    都新建 PersistentClient（跨线程/重复创建可能触发 chromadb tenant 校验问题，
+    也省去重复打开 sqlite 的开销）。
+    """
     if not os.path.isdir(persist_dir):
         return None
-    emb = get_embedding_function()
-    return Chroma(
-        persist_directory=persist_dir,
-        embedding_function=emb,
-        collection_name=COLLECTION,
-    )
+    key = persist_dir
+    if key not in _CHROMA_CACHE:
+        emb = get_embedding_function()
+        _CHROMA_CACHE[key] = Chroma(
+            persist_directory=persist_dir,
+            embedding_function=emb,
+            collection_name=COLLECTION,
+        )
+    return _CHROMA_CACHE[key]
 
 
 def search(query: str, k: int = 4, persist_dir: str = DEFAULT_PERSIST) -> list[str]:
