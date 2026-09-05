@@ -8,6 +8,7 @@ from agents.chatbot import chatbot
 from agents.command_agent import command_agent
 from agents.github_mcp_agent.github_mcp_agent import github_mcp_agent
 from agents.interrupt_agent import interrupt_agent
+from agents.knowledge_agent import diagnosis_agent, knowledge_agent
 from agents.knowledge_base_agent import kb_agent
 from agents.langgraph_supervisor_agent import langgraph_supervisor_agent
 from agents.langgraph_supervisor_hierarchy_agent import langgraph_supervisor_hierarchy_agent
@@ -65,6 +66,14 @@ agents: dict[str, Agent] = {
     "sql-data-agent": Agent(
         description="农业物联网查数Agent：自然语言查业务库(NL2SQL+RAG-on-DDL+只读安全)，返回数据与图表。",
         graph_like=sql_data_agent,
+    ),
+    "knowledge-agent": Agent(
+        description="农业物联网知识Agent：混合检索(向量+BM25+RRF)问答，带出处溯源。",
+        graph_like=knowledge_agent,
+    ),
+    "diagnosis-agent": Agent(
+        description="预警诊断Agent：数据证明+建议出处双轨，输出土壤墒情/盐碱异常诊断报告。",
+        graph_like=diagnosis_agent,
     ),
 }
 
