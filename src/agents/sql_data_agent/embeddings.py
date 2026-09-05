@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 from typing import Any
 
 os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
@@ -23,8 +24,13 @@ from agents.sql_data_agent.ddl import TableCard  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
+# 项目根目录 = <root>/src/agents/sql_data_agent 的第3级 parent
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
 EMBED_MODEL = "BAAI/bge-small-zh-v1.5"
-DEFAULT_PERSIST = "./vector_store/rag_ddl"
+DEFAULT_PERSIST = str(PROJECT_ROOT / "vector_store" / "rag_ddl")
+SCHEMA_PATH = PROJECT_ROOT / "scripts" / "db" / "schema.sql"
+MODELS_CACHE = str(PROJECT_ROOT / "models" / "embed")
 COLLECTION = "bizagent_rag_ddl"
 _embed_fn: Any = None
 
@@ -35,7 +41,7 @@ def get_embedding_function() -> Any:
     if _embed_fn is None:
         from fastembed import TextEmbedding
 
-        model = TextEmbedding(EMBED_MODEL, cache_dir="./models/embed")
+        model = TextEmbedding(EMBED_MODEL, cache_dir=MODELS_CACHE)
 
         class FastEmbedEmbeddings:
             def __init__(self, m):
@@ -111,10 +117,8 @@ def search(query: str, k: int = 4, persist_dir: str = DEFAULT_PERSIST) -> list[s
 
 def build_index_from_schema(persist_dir: str = DEFAULT_PERSIST) -> None:
     """从 scripts/db/schema.sql 直接构建索引（一体化，供工具/初始化调用）。"""
-    from pathlib import Path
-
     from agents.sql_data_agent.ddl import parse_create_tables
 
-    ddl = Path("scripts/db/schema.sql").read_text(encoding="utf-8")
+    ddl = SCHEMA_PATH.read_text(encoding="utf-8")
     cards = parse_create_tables(ddl)
     build_index(cards, persist_dir)
