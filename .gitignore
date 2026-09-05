@@ -196,3 +196,8 @@ smoke_live_app_failure.png
 
 # Claude Code agent worktrees (ephemeral, per-agent git checkouts)
 .claude/worktrees/
+
+# Local ML models & vector stores (too large for git)
+models/
+vector_store/
+*.tar.gz

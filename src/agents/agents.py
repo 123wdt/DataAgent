@@ -14,6 +14,7 @@ from agents.langgraph_supervisor_hierarchy_agent import langgraph_supervisor_hie
 from agents.lazy_agent import LazyLoadingAgent
 from agents.rag_assistant import rag_assistant
 from agents.research_assistant import research_assistant
+from agents.sql_data_agent import sql_data_agent
 from schema import AgentInfo
 
 DEFAULT_AGENT = "research-assistant"
@@ -60,6 +61,10 @@ agents: dict[str, Agent] = {
     "github-mcp-agent": Agent(
         description="A GitHub agent with MCP tools for repository management and development workflows.",
         graph_like=github_mcp_agent,
+    ),
+    "sql-data-agent": Agent(
+        description="农业物联网查数Agent：自然语言查业务库(NL2SQL+RAG-on-DDL+只读安全)，返回数据与图表。",
+        graph_like=sql_data_agent,
     ),
 }
 
