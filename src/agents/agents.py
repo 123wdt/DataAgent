@@ -8,6 +8,7 @@ from agents.chatbot import chatbot
 from agents.command_agent import command_agent
 from agents.daily_report_agent import daily_report_agent
 from agents.github_mcp_agent.github_mcp_agent import github_mcp_agent
+from agents.graph_agent import graph_agent
 from agents.interrupt_agent import interrupt_agent
 from agents.knowledge_agent import diagnosis_agent, knowledge_agent
 from agents.knowledge_base_agent import kb_agent
@@ -79,6 +80,10 @@ agents: dict[str, Agent] = {
     "daily-report-agent": Agent(
         description="日报Agent：汇总各区域墒情/气象/预警，生成农业物联网日报。",
         graph_like=daily_report_agent,
+    ),
+    "graph-agent": Agent(
+        description="GraphRAG图检索Agent：通过自实现农业知识图谱(三元组+社区+子图)回答关系型问题。",
+        graph_like=graph_agent,
     ),
 }
 
